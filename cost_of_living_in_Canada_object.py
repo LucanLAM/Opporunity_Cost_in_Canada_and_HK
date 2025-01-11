@@ -69,34 +69,62 @@ def support_convolve(Rr, Pi, Ri, N):
     return temp_sum
 
 
+def_Canada_income_income_after_tax_pair = {
+    40000: 32978,
+    45000: 36424,
+    50000: 39719,
+    55000: 43265,
+    60000: 46559,
+    62500: 48168,
+    65000: 49801,
+    67500: 51443,
+    70000: 53155,
+    72500: 54914,
+    75000: 56523,
+    77500: 58282,
+    80000: 60040,
+    85000: 63558,
+    90000: 67075,
+    95000: 70567,
+    100000: 73993,
+    110000: 80662,
+    150000: 103429,
+    200000: 130088
+}
+
+
+def income_before_to_income_after_tax_interpolation(income_before_tax):
+    x = list(def_Canada_income_income_after_tax_pair.keys())
+    # y = list(self.Canada_income_income_after_tax_pair.values())
+    if income_before_tax in x:
+        return def_Canada_income_income_after_tax_pair[income_before_tax]
+    else:
+        lower_key = None
+        upper_key = None
+        for i in sorted(x):
+            if i < income_before_tax:
+                lower_key = i
+            elif i > income_before_tax:
+                upper_key = i
+                break
+
+        if lower_key is None or upper_key is None:
+            return income_before_to_income_after_tax(income_before_tax)
+            # raise ValueError(f"income before tax {income_before_tax} is out of the bounds of the data range.")
+
+        lower_value = def_Canada_income_income_after_tax_pair[lower_key]
+        upper_value = def_Canada_income_income_after_tax_pair[upper_key]
+
+        # interpolation
+        interpolated_value = lower_value + (income_before_tax - lower_key) * (upper_value - lower_value) / (upper_key - lower_key)
+        return int(interpolated_value)
+
+
 class cost_of_living_in_Canada:
-    def __init__(self, S_HK, S_CA_before_tax, R_HK, R_CA, C_HK, C_CA, r_HK, r_CA, rate, Canada_income_income_after_tax_pair=None, percentage_of_investment_HK=0.0,
+    def __init__(self, S_HK, S_CA_before_tax, R_HK, R_CA, C_HK, C_CA, r_HK, r_CA, rate, Canada_income_income_after_tax_pair=def_Canada_income_income_after_tax_pair,
+                 percentage_of_investment_HK=0.0,
                  return_of_investment_HK=0.0, percentage_of_investment_CA=0.0, return_of_investment_CA=0.0):
-        if Canada_income_income_after_tax_pair is None:
-            self.Canada_income_income_after_tax_pair = {
-                40000: 32978,
-                45000: 36424,
-                50000: 39719,
-                55000: 43265,
-                60000: 46559,
-                62500: 48168,
-                65000: 49801,
-                67500: 51443,
-                70000: 53155,
-                72500: 54914,
-                75000: 56523,
-                77500: 58282,
-                80000: 60040,
-                85000: 63558,
-                90000: 67075,
-                95000: 70567,
-                100000: 73993,
-                110000: 80662,
-                150000: 103429,
-                200000: 130088
-            }
-        else:
-            self.Canada_income_income_after_tax_pair = Canada_income_income_after_tax_pair
+        self.Canada_income_income_after_tax_pair = Canada_income_income_after_tax_pair
         self.S_HK = S_HK
         self.S_CA = self.Canada_income_after_tax(S_CA_before_tax)
         self.R_HK = R_HK
@@ -281,7 +309,8 @@ if __name__ == '__main__':
     # acceptable_cost = 500_000
     acceptable_cost = 0
     income_cad = case1.income_accept_cost(number_of_year=number_of_year_of_getting_living_in_Canada, acceptable_cost=acceptable_cost)
-    print(f"With acceptable cost of {acceptable_cost} HKD in the period of {number_of_year_of_getting_living_in_Canada} years, you need to have annual income of {int(income_cad)} CAD")
+    print(
+        f"With acceptable cost of {acceptable_cost} HKD in the period of {number_of_year_of_getting_living_in_Canada} years, you need to have annual income of {int(income_cad)} CAD")
     S_CA_expected_before_tax = 30000
     op_cost = case1.opportunity_cost(expected_S_CA=S_CA_expected_before_tax, number_of_year=number_of_year_of_getting_living_in_Canada)
     print(f"opportunity cost with {S_CA_expected_before_tax} CAD wage is: {int(op_cost)}")
@@ -290,7 +319,8 @@ if __name__ == '__main__':
     op_with_investment = np.array([case1.opportunity_cost_of_living_in_Canada_with_investment(number_of_year=i) for i in year_array])
     # plot_data(data_x=year_array, data_y=op_with_investment, xlabel='year', ylabel='Opportunity cose', title='Opportunity cose against year')
     CA_income_array = np.linspace(40000, 150_000, 500)
-    op_with_investment_expected_array = np.array([case1.opportunity_cost_of_living_in_Canada_with_investment_expected(S_CA_before_tax=i, number_of_year=6) for i in CA_income_array])
+    op_with_investment_expected_array = np.array(
+        [case1.opportunity_cost_of_living_in_Canada_with_investment_expected(S_CA_before_tax=i, number_of_year=6) for i in CA_income_array])
     plot_data_matplotlib(data_x=CA_income_array, data_y=op_with_investment_expected_array, xlabel='Canada income before tax', ylabel='Opportunity cost',
                          title='Opportunity cost against '
                                'income')
